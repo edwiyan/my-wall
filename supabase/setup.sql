@@ -59,6 +59,15 @@ create policy "Anyone can read the profile"
   to anon, authenticated
   using (true);
 
+-- Table permissions, spelled out so the script works even when "Automatically expose
+-- new tables" was turned off when the project was created. Row Level Security above
+-- still decides which rows each action can touch.
+grant usage on schema public to anon, authenticated, service_role;
+revoke all on public.posts, public.profile from anon, authenticated;
+grant select, insert on public.posts to anon, authenticated;
+grant select on public.profile to anon, authenticated;
+grant all on public.posts, public.profile to service_role;
+
 -- 4. Realtime: broadcast new posts and profile picture changes to every open browser.
 do $$
 declare t text;
