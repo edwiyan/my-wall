@@ -1,9 +1,11 @@
 // Pure helpers for the wall. No Supabase or React here, so they are easy to test.
 
 export const MAX_LENGTH = 280;
-export const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB, same limit as the storage bucket
-export const FEED_LIMIT = 50;
-/** Same list as the storage bucket's allowed_mime_types in supabase/setup.sql. */
+export const MAX_NAME_LENGTH = 40;
+export const DEFAULT_NAME = "Guest";
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB, same limit as the post-images bucket
+export const PAGE_SIZE = 20;
+/** Same list as the post-images bucket's allowed_mime_types in supabase/setup.sql. */
 export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
 export type Post = {
@@ -14,6 +16,8 @@ export type Post = {
   created_at: string;
 };
 
+export const POST_COLUMNS = "id, name, body, image_url, created_at";
+
 /** Returns an error message, or null when the message can be shared. */
 export function validateMessage(text: string, hasImage = false): string | null {
   const trimmed = text.trim();
@@ -23,6 +27,12 @@ export function validateMessage(text: string, hasImage = false): string | null {
     return `Keep it to ${MAX_LENGTH} characters (you have ${trimmed.length}).`;
   }
   return null;
+}
+
+/** The name a post is shared under: what the visitor typed, or "Guest". */
+export function displayName(typed: string): string {
+  const clean = typed.replace(/\s+/g, " ").trim().slice(0, MAX_NAME_LENGTH);
+  return clean || DEFAULT_NAME;
 }
 
 /** Returns an error message, or null when the file is an acceptable photo. */
@@ -36,17 +46,36 @@ export function validateImage(file: { type: string; size: number }): string | nu
 export function imageExtension(type: string): string {
   const sub = type.split("/")[1]?.toLowerCase() ?? "";
   if (sub === "jpeg") return "jpg";
-  if (sub === "svg+xml") return "svg";
   return /^[a-z0-9]+$/.test(sub) ? sub : "img";
 }
 
-/** Adds posts to the feed without duplicates, newest first, capped at FEED_LIMIT. */
+/** Adds posts to the feed without duplicates, newest first. */
 export function mergePosts(current: Post[], incoming: Post[]): Post[] {
   const byId = new Map<string, Post>();
   for (const post of [...current, ...incoming]) byId.set(post.id, post);
-  return [...byId.values()]
-    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
-    .slice(0, FEED_LIMIT);
+  return [...byId.values()].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+}
+
+/** Up to two initials for an avatar: "Edrian Reyes" → "ER", "guest" → "G". */
+export function initials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "?";
+  const letters = words.length === 1 ? [words[0][0]] : [words[0][0], words[words.length - 1][0]];
+  return letters.join("").toUpperCase();
+}
+
+const AVATAR_COLORS = ["#6d84b4", "#4c9a6a", "#c0703d", "#8a63b8", "#3d8fb0", "#b0506a", "#7a8a3d"];
+
+/** A stable colour per name, so the same visitor always gets the same avatar. */
+export function avatarColor(name: string): string {
+  let hash = 0;
+  for (const ch of name.trim().toLowerCase()) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
+
+/** "1 person here now" / "3 people here now". */
+export function presenceLabel(count: number): string {
+  return count === 1 ? "1 person here now" : `${count} people here now`;
 }
 
 /** "just now", "5 minutes ago", "yesterday", or a date for anything older than a week. */
@@ -62,9 +91,12 @@ export function timeAgo(iso: string, now: number = Date.now()): string {
   const days = Math.round(hours / 24);
   if (days === 1) return "yesterday";
   if (days < 7) return `${days} days ago`;
-  return new Date(then).toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  return new Date(then).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+/** Full timestamp for hover text, e.g. "Tuesday, November 17, 2026 at 8:42 PM". */
+export function fullDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" });
 }

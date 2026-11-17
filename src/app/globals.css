@@ -1,13 +1,68 @@
 @import "tailwindcss";
 
-/* 2008-era look: small Lucida Grande/Tahoma text on white, always light. */
+/* 2008-era look: small Lucida Grande/Tahoma text, blue and white, always light. */
 :root {
   color-scheme: light;
 }
 
 body {
-  background: #ffffff;
+  background: #edf0f5;
   color: #333333;
   font-family: "Lucida Grande", Tahoma, Verdana, Arial, sans-serif;
   font-size: 13px;
+}
+
+/* New posts slide in and get the classic "yellow fade" highlight. */
+@keyframes post-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes yellow-fade {
+  from {
+    background-color: #fff4bf;
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.post-fresh {
+  animation:
+    post-in 0.35s ease-out,
+    yellow-fade 2.4s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post-fresh {
+    animation: yellow-fade 2.4s ease-out;
+  }
+}
+
+.lb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #bdc7d8;
+  background: #f7f8fb;
+  color: #3b5998;
+  font-size: 16px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.lb-btn:hover:not(:disabled) {
+  background: #eceff5;
+}
+
+.lb-btn:disabled {
+  opacity: 0.4;
 }

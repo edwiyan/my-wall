@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  FEED_LIMIT,
   MAX_LENGTH,
+  avatarColor,
+  displayName,
   imageExtension,
+  initials,
   mergePosts,
+  presenceLabel,
   timeAgo,
   validateImage,
   validateMessage,
@@ -38,6 +41,17 @@ describe("validateMessage", () => {
   });
 });
 
+describe("displayName", () => {
+  it("falls back to Guest and tidies spacing", () => {
+    expect(displayName("")).toBe("Guest");
+    expect(displayName("   ")).toBe("Guest");
+    expect(displayName("  Ana   Cruz ")).toBe("Ana Cruz");
+  });
+  it("caps names at 40 characters", () => {
+    expect(displayName("x".repeat(60))).toHaveLength(40);
+  });
+});
+
 describe("validateImage", () => {
   it("accepts images up to 5 MB", () => {
     expect(validateImage({ type: "image/png", size: 1000 })).toBeNull();
@@ -65,11 +79,28 @@ describe("mergePosts", () => {
     expect(merged.map((p) => p.id)).toEqual(["b", "a"]);
   });
 
-  it("keeps at most FEED_LIMIT posts", () => {
-    const many = Array.from({ length: FEED_LIMIT + 5 }, (_, i) =>
-      post(String(i), new Date(Date.UTC(2026, 0, 1, 0, i)).toISOString()),
-    );
-    expect(mergePosts([], many)).toHaveLength(FEED_LIMIT);
+  it("appends older pages in order", () => {
+    const page1 = [post("c", "2026-11-17T12:00:00Z"), post("b", "2026-11-17T11:00:00Z")];
+    const page2 = [post("a", "2026-11-17T10:00:00Z")];
+    expect(mergePosts(page1, page2).map((p) => p.id)).toEqual(["c", "b", "a"]);
+  });
+});
+
+describe("avatars", () => {
+  it("makes up to two initials", () => {
+    expect(initials("Edrian Reyes")).toBe("ER");
+    expect(initials("guest")).toBe("G");
+    expect(initials("Ana Maria Cruz")).toBe("AC");
+  });
+  it("gives the same colour to the same name", () => {
+    expect(avatarColor("Ana")).toBe(avatarColor(" ana "));
+  });
+});
+
+describe("presenceLabel", () => {
+  it("uses the right plural", () => {
+    expect(presenceLabel(1)).toBe("1 person here now");
+    expect(presenceLabel(3)).toBe("3 people here now");
   });
 });
 
