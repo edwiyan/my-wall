@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+/* 2008-era look: small Lucida Grande/Tahoma text on white, always light. */
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: #ffffff;
+  color: #333333;
+  font-family: "Lucida Grande", Tahoma, Verdana, Arial, sans-serif;
+  font-size: 13px;
+}
