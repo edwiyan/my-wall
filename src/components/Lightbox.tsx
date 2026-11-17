@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { fullDate, type Post } from "@/lib/wall";
+import PostBody from "./PostBody";
 
 type Props = {
   photos: Post[];
@@ -50,7 +51,7 @@ export default function Lightbox({ photos, index, onChange }: Props) {
           <figcaption className="flex items-start justify-between gap-4 border-t border-[#d8dfea] p-3">
             <div className="min-w-0">
               <p className="break-words">
-                <span className="font-bold text-[#3b5998]">{post.name}</span> {post.body}
+                <span className="font-bold text-[#3b5998]">{post.name}</span> <PostBody text={post.body} />
               </p>
               <p className="mt-1 text-[11px] text-[#999]">
                 {fullDate(post.created_at)} · Photo {index + 1} of {photos.length}

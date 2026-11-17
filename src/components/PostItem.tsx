@@ -1,4 +1,5 @@
 import { fullDate, timeAgo, type Post } from "@/lib/wall";
+import PostBody from "./PostBody";
 import Avatar from "./Avatar";
 
 type Props = {
@@ -16,7 +17,7 @@ export default function PostItem({ post, now, fresh, profilePhoto, onOpenPhoto }
       <Avatar name={post.name} profilePhoto={profilePhoto} />
       <div className="min-w-0 flex-1">
         <p className="leading-[1.45] break-words whitespace-pre-wrap text-[#333]">
-          <span className="font-bold text-[#3b5998]">{post.name}</span> {post.body}
+          <span className="font-bold text-[#3b5998]">{post.name}</span> <PostBody text={post.body} />
         </p>
         {post.image_url && (
           <button

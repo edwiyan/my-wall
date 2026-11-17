@@ -56,6 +56,26 @@ export function mergePosts(current: Post[], incoming: Post[]): Post[] {
   return [...byId.values()].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
 }
 
+export type TextPart = { type: "text"; value: string } | { type: "link"; value: string; href: string };
+
+const URL_PATTERN = /\bhttps?:\/\/[^\s<>"']+/gi;
+
+/** Splits a message into plain text and http(s) links, so links can be made clickable. */
+export function linkify(text: string): TextPart[] {
+  const parts: TextPart[] = [];
+  let last = 0;
+  for (const match of text.matchAll(URL_PATTERN)) {
+    // Leave trailing punctuation ("see https://x.com.") outside the link.
+    const url = match[0].replace(/[.,!?;:)\]]+$/, "");
+    const start = match.index ?? 0;
+    if (start > last) parts.push({ type: "text", value: text.slice(last, start) });
+    parts.push({ type: "link", value: url, href: url });
+    last = start + url.length;
+  }
+  if (last < text.length) parts.push({ type: "text", value: text.slice(last) });
+  return parts;
+}
+
 /** Up to two initials for an avatar: "Edrian Reyes" → "ER", "guest" → "G". */
 export function initials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);

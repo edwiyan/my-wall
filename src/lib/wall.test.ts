@@ -5,6 +5,7 @@ import {
   displayName,
   imageExtension,
   initials,
+  linkify,
   mergePosts,
   presenceLabel,
   timeAgo,
@@ -94,6 +95,19 @@ describe("avatars", () => {
   });
   it("gives the same colour to the same name", () => {
     expect(avatarColor("Ana")).toBe(avatarColor(" ana "));
+  });
+});
+
+describe("linkify", () => {
+  it("finds links and keeps the text around them", () => {
+    expect(linkify("my portfolio: https://example.com/a. Thanks")).toEqual([
+      { type: "text", value: "my portfolio: " },
+      { type: "link", value: "https://example.com/a", href: "https://example.com/a" },
+      { type: "text", value: ". Thanks" },
+    ]);
+  });
+  it("ignores non-http schemes", () => {
+    expect(linkify("javascript:alert(1)")).toEqual([{ type: "text", value: "javascript:alert(1)" }]);
   });
 });
 
